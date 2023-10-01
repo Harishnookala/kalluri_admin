@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "490134440902",
+    "project_id": "kalluri-f7bc1",
+    "storage_bucket": "kalluri-f7bc1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490134440902:android:0be9f8a660ccb4e048c0c7",
+        "android_client_info": {
+          "package_name": "com.example.kalluri"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP0bBjH_dEY6IiA2PMiBsNn5-hcyJenZw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490134440902:android:b4d4372b94bfcad448c0c7",
+        "android_client_info": {
+          "package_name": "com.example.kalluri_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP0bBjH_dEY6IiA2PMiBsNn5-hcyJenZw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
