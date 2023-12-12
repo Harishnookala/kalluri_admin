@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:core';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:kalluri_admin/AdminScreens/homeScreen.dart';
 import 'mainscreen.dart';
 
 Future<void> main() async {
@@ -46,7 +47,7 @@ class SplashScreenState extends State<SplashScreen> {
     Timer(
         const Duration(seconds: 3),
             () => Navigator.of(context).pushReplacement(MaterialPageRoute(
-            builder: (BuildContext context) => const Mainscreen())));
+            builder: (BuildContext context) => Adminpannel(phonenumber: "9866956980",))));
   }
 
   @override

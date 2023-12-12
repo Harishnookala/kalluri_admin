@@ -59,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
             child: ListView(
               shrinkWrap: true,
               children: [
-                WaveClipper(),
+                const WaveClipper(),
                 SizedBox(
                   height: MediaQuery.of(context).size.height,
                   child: Column(

@@ -28,7 +28,6 @@ class ShownProductsState extends State<ShownProducts> {
       .doc("Products")
       .collection("Product_details")
       .snapshots();
-  var document_id;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -44,6 +43,7 @@ class ShownProductsState extends State<ShownProducts> {
               categories = products.toList();
               return ListView.builder(
                 shrinkWrap: true,
+                physics: const BouncingScrollPhysics(),
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   String category = categories[index];
@@ -95,7 +95,7 @@ class ShownProductsState extends State<ShownProducts> {
             return Column(
               children: [
                 SizedBox(
-                  height: MediaQuery.of(context).size.height*0.4,
+                  height: MediaQuery.of(context).size.height*0.28,
                   child: Card(
                     elevation: 2.3,
                     shape: RoundedRectangleBorder(

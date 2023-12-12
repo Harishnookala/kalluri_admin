@@ -110,12 +110,7 @@ class Authentication {
     }
   }
 
-     Stream<List<Categories>>get_product_values()  {
-   return FirebaseFirestore.instance.collection("Admin").doc("Products").
-   collection("Product_details").snapshots().map((event) =>event.docs.map((e) => Categories.fromJson(e.data())).toList());
 
-
-   }
 
    get_total_price(List listofvalues, DocumentSnapshot<Object?>? products) {
     var price;

@@ -21,9 +21,7 @@ class adminPannelState extends State<Adminpannel> {
  adminPannelState({this.phonenumber});
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => false,
-      child: MaterialApp(
+    return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
           backgroundColor: Colors.grey.shade200,
@@ -66,24 +64,21 @@ class adminPannelState extends State<Adminpannel> {
                                   const Newproducts()));
                     },
                     child: const Text(" +  Create ",
-                        style: TextStyle(fontFamily: "Poppins-Thin",fontSize: 20)),
+                        style: TextStyle(fontFamily: "Poppins-Thin",fontSize: 18,
+                         letterSpacing: 0.5
+                        ),)
                   ),
                 ),
               ],
             ),
           ),
-          drawer: Container(
-            width: 280,
-            color: Colors.white,
-            child: Drawer(
+          drawer:Drawer(
                 child: DrawerHeader(
               child: BuildAdminDrawer(phoneNumber: phonenumber,),
-            )),
+            ),
           ),
           body: ShownProducts(phonenumber:phonenumber),
         ),
-
-      ),
     );
   }
 }

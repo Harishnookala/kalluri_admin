@@ -1,7 +1,9 @@
-import 'dart:collection';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:kalluri_admin/AdminScreens/updateButton.dart';
+
+import '../Model/products.dart';
 
 class BuildOrders extends StatefulWidget {
   const BuildOrders({Key? key}) : super(key: key);
@@ -12,14 +14,19 @@ class BuildOrders extends StatefulWidget {
 
 class BuildordersState extends State<BuildOrders> {
   var collection;
-  bool pressed = false;
+  List<Items> itemvalues = [];
+  bool? pressed = false;
+  int? count;
+  String? id;
+  List? idvalues = [];
+  int?selectIndex;
+  List<Items> categoriesMilk = [];
+  List<Items> categoriesCurd = [];
+  List<Items> categoriesGhee =[];
+  List<Items> categoriesPaneer = [];
   @override
   void initState() {
-    collection = FirebaseFirestore.instance
-        .collection("Admin")
-        .doc("Orders")
-        .collection("Order_details")
-        .get();
+    collection = FirebaseFirestore.instance.collection("dayOrders").snapshots();
     super.initState();
   }
 
@@ -27,266 +34,626 @@ class BuildordersState extends State<BuildOrders> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(
-              height: 15,
-            ),
-            TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Icon(Icons.arrow_back_ios)),
-            Expanded(
-                child: FutureBuilder<QuerySnapshot<Object?>>(
-                    future: collection,
-                    // ignore: non_constant_identifier_names
-                    builder: (context, datasnapshot) {
-                      QuerySnapshot<Object?>? userData = datasnapshot.data;
-                      if (datasnapshot.hasData) {
-                        return Container(
-                          child: builddata(userData),
-                        );
-                      } else {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                    })),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  builddata(QuerySnapshot<Object?>? userData) {
-    List values = getvalues(userData);
-    Iterable numbers = values.reversed;
-    values = numbers.toList();
-    var date = DateTime.now();
-    var formatdate = DateFormat('EEE d MMM').format(date);
-
-    return Container(
-      margin: const EdgeInsets.all(12.3),
-      child: ListView.builder(
-          shrinkWrap: true,
-          physics: const ScrollPhysics(),
-          itemCount: values.length,
-          itemBuilder: (context,index){
-            List? listofdates = getListOfDates(userData,values,index,formatdate);
-            List?listofproducts = getListofProducts(userData, values, index, formatdate);
-            List?listofprices = getListOfPrices(userData, values, index, formatdate);
-            List?lisofpackets = getListOfPackets(userData, values, index, formatdate,);
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                listofdates!=null?Container(
-                    margin: const EdgeInsets.all(12.3),
-                    child: Text(values[index])):Container(),
-                ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: listofdates!.length,
-                    physics: const ScrollPhysics(),
-                    itemBuilder: (context,count){
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(listofdates[count].toString()),
-                          Container(
-                            margin: const EdgeInsets.all(6.3),
-                            child: Card(
-                              child:Container(
-                                margin: const EdgeInsets.all(6.3),
-
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      alignment: Alignment.topLeft,
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          const Text("Product Name : -"),
-                                          Text(listofproducts![count])
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      margin: const EdgeInsets.all(6.3),
-
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text("Price : -"),
-                                          Text(listofprices![count].toString())
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      margin: const EdgeInsets.all(6.3),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          const Text("No of Packets : -"),
-                                          Text(lisofpackets![count].toString())
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                        margin: const EdgeInsets.only(bottom: 5.6,left: 5.6),
-                                        height: 35,
-                                        width: 100,
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                            BorderRadius.circular(10.0),
-                                            color: const Color(0xffb0d44c)),
-                                        child: TextButton(onPressed: (){
-                                          List? listofindexes= getdocuments(userData,values, index,formatdate,count);
-                                          List?listofdocuments = getlistofdocuments(userData,values,index,formatdate,listofdates[count].toString());
-                                          var documentId = listofdocuments![count];
-                                          var indexes = listofindexes![count];
-                                          FirebaseFirestore.instance.collection("Admin").doc("Orders").
-                                          collection("Order_details").doc(documentId).update( {
-                                            "$indexes":[
-                                              "Deliver"
-                                            ]
-                                          });
-                                          }, child: const Text("Deliver",style: TextStyle(color: Colors.white),)))
-                                  ],
-                                ),
-                              ),
-                            ),
-                          )
-                        ],
-                      );
-                    })
+      home:DefaultTabController(
+        length: 4,
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.purple,
+            bottom: const TabBar(
+              tabs: [
+                Tab(child: Text("Milk",style: TextStyle(fontFamily: "Poppins",
+                )),),
+                Tab(child: Text("Curd",style: TextStyle(fontFamily: "Poppins"),),),
+                Tab(child: Text("Ghee",style: TextStyle(fontFamily: "Poppins"),),),
+                Tab(child: Text("Paneer",style: TextStyle(fontFamily: "Poppins"),),)
               ],
-            );
-          }),
+            ),
+            title:  Container(
+              margin: const EdgeInsets.only(left: 12.3),
+              child: const Text("Today Order's",style: TextStyle(fontSize: 18.5),),
+            )
+          ),
+          body: StreamBuilder<QuerySnapshot>(
+            stream: collection,
+            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.hasData) {
+                var data = snapshot.data;
+                List<Items>? items = getData(data!);
+
+                return Container(child: loadingItems(items),);
+              }
+              return Container();
+            },
+          ),
+        ),
+      )
     );
   }
-  getvalues(QuerySnapshot<Object?>? userData) {
-    String? phonenumber;
-    Set numbers = HashSet();
-    for (int i = 0; i < userData!.docs.length; i++) {
-      DocumentSnapshot usernumber = userData.docs[i];
-      phonenumber = usernumber.get("phonenumber");
-      numbers.add(phonenumber);
-    }
-    numbers.toList();
-    return numbers.toList();
-  }
 
-  List? getListOfDates(QuerySnapshot<Object?>? userData, List values, int index,String formatdate) {
-    List?listofdates =[];
-    String?singleDate;
-    for(int i =0;i<userData!.docs.length;i++){
-      List dates = userData.docs[i].get("Single Orders");
-      for(int j=0;j<dates.length;j++){
-        if(userData.docs[i].get("phonenumber")==values[index]&&formatdate==dates[j]){
-          singleDate =dates[j];
-
-          listofdates.add(singleDate,);
+  loadingItems(List<Items>? items) {
+    List data = getCategories (items);
+          return TabBarView(
+              children: [
+                Container(
+                  child: milkTab(data[0]),
+                ),
+                Container(
+                  child: curdTab(data[1]),
+                ),
+                Container(
+                  child: gheeTab(data[2]),
+                ),
+                Container(
+                  child: paneerTab(data[3]),
+                ),
+              ]);
         }
+
+
+  List<Items>? getData(QuerySnapshot<Object?> data) {
+    List? values = [];
+    List<Items> itemvalues = [];
+    List<Items> group = [];
+    var date = DateTime.now();
+    var format = DateFormat("EEE  d MMM");
+    var todaydate = format.format(date);
+    for (int i = 0; i < data.docs.length; i++) {
+      values = data.docs[i].get("values");
+      for (int j = 0; j < values!.length; j++) {
+        idvalues!.add(data.docs[i].id);
+        Items items = Items.fromJson(values[j]);
+        itemvalues.add(items);
       }
     }
-    return listofdates;
-  }
-  List? getListofProducts(QuerySnapshot<Object?>? userData, List values, int index, String formatdate) {
-    List?listofproducts =[];
-    String?productName;
-    for(int i =0;i<userData!.docs.length;i++){
-      List dates = userData.docs[i].get("Single Orders");
-      List products = userData.docs[i].get("Products");
 
-      for(int j=0;j<dates.length;j++){
-        if(userData.docs[i].get("phonenumber")==values[index]&&formatdate==dates[j]){
-          productName =products[j];
-          listofproducts.add(productName,);
+      for(int j=0;j<itemvalues.length;j++){
+        var dateoftime = getdate(itemvalues[j].date);
+        if (dateoftime == todaydate) {
+          group.add(Items(
+            pressed: false,
+            productName: itemvalues[j].productName,
+            category: itemvalues[j].category,
+            packets: itemvalues[j].packets,
+            phonenumber: itemvalues[j].phonenumber,
+            quantity: itemvalues[j].quantity,
+            id: idvalues![j],
+            userid: itemvalues[j].id
+          ));
         }
       }
-    }
-    return listofproducts;
+
+    return group;
   }
-  List? getListOfPrices(QuerySnapshot<Object?>? userData, List values, int index, String formatdate) {
-    List?listofprices =[];
-    String?pricelist;
-    for(int i =0;i<userData!.docs.length;i++){
-      List dates = userData.docs[i].get("Single Orders");
-      List prices = userData.docs[i].get("Prices");
 
-      for(int j=0;j<dates.length;j++){
-        if(userData.docs[i].get("phonenumber")==values[index]&&formatdate==dates[j]){
-          pricelist =prices[j].toString();
+  data(List<Items> itemvalues, index) {
+    setState(() {
+      itemvalues[index].pressed = !itemvalues[index].pressed!;
+    });
+  }
 
-          listofprices.add(pricelist,);
-        }
+  String? getdate(Timestamp? date) {
+    var format = DateFormat("EEE  d MMM"); // convert into hours and minutes
+    var getdate = format.format(date!.toDate());
+    return getdate;
+  }
+
+  getCategories(List<Items>? items) {
+    List listofitems =[];
+    for(int i=0;i<items!.length;i++){
+      if(items[i].category=="Milk"){
+        categoriesMilk.add(Items(
+          userid: items[i].userid,
+          id: items[i].id,
+          pressed: false,
+          phonenumber: items[i].phonenumber,
+          productName: items[i].productName,
+          category: items[i].category,
+          packets: items[i].packets,
+          quantity: items[i].quantity,
+          date: items[i].date,
+        ));
+
       }
-    }
-    return listofprices;
-  }
-
-  List? getListOfPackets(QuerySnapshot<Object?>? userData, List values, int index, String formatdate) {
-    List?listofpackets =[];
-    String?singlepackets;
-    for(int i =0;i<userData!.docs.length;i++){
-      List dates = userData.docs[i].get("Single Orders");
-      List packets = userData.docs[i].get("Packets");
-
-      for(int j=0;j<dates.length;j++){
-        if(userData.docs[i].get("phonenumber")==values[index]&&formatdate==dates[j]){
-          singlepackets =packets[j].toString();
-
-          listofpackets.add(singlepackets,);
-        }
+      if(items[i].category=="Curd"){
+        categoriesCurd.add(Items(
+            userid: items[i].userid,
+            id: items[i].id,
+            pressed: false,
+            phonenumber: items[i].phonenumber,
+            productName: items[i].productName,
+            category: items[i].category,
+            packets: items[i].packets,
+            date: items[i].date,
+            quantity: items[i].quantity
+        ));
       }
-    }
-    return listofpackets;
-  }
-
-  List? getdocuments(QuerySnapshot<Object?>? userData, List values, int index, String formatdate, int count) {
-    List?id =[];
-    for(int i=0;i<userData!.docs.length;i++){
-      List dates = userData.docs[i].get("Single Orders");
-      for(int j = 0;j<dates.length;j++){
-        if(userData.docs[i].get("phonenumber")==values[index]&&formatdate==dates[j]){
-          id.add(j.toString());
-        }
+      if(items[i].category=="Ghee"){
+        categoriesGhee.add(Items(
+            userid: items[i].userid,
+            id: items[i].id,
+            pressed: false,
+            phonenumber: items[i].phonenumber,
+            productName: items[i].productName,
+            category: items[i].category,
+            packets: items[i].packets,
+            date: items[i].date,
+            quantity: items[i].quantity
+        ));
       }
+      if(items[i].category=="Paneer"){
+        categoriesPaneer.add(Items(
+            userid: items[i].userid,
+            id: items[i].id,
+            pressed: false,
+            phonenumber: items[i].phonenumber,
+            productName: items[i].productName,
+            category: items[i].category,
+            packets: items[i].packets,
+            date: items[i].date,
+            quantity: items[i].quantity
+        ));
+       }
     }
-    return id;
+    listofitems.add(categoriesMilk);
+    listofitems.add(categoriesCurd);
+    listofitems.add(categoriesGhee);
+    listofitems.add(categoriesPaneer);
+    return listofitems;
   }
 
-  List? getlistofdocuments(QuerySnapshot<Object?>? userData, List values, int index, String formatdate, String date) {
-    List?id =[];
-    for (int i = 0; i < userData!.docs.length; i++) {
-
-      List dates = userData.docs[i].get("Single Orders");
-
-      for (int j = 0; j < dates.length; j++) {
-        if (values[index] == userData.docs[i].get("phonenumber")&&formatdate==dates[j]) {
-          id.add(userData.docs[i].id);
-        }
-      }
-    }
-    return id;
+  milkTab(data) {
+   return ListView.builder(
+       itemCount: data.length,
+       physics: const BouncingScrollPhysics(),
+       itemBuilder: (context,index){
+         var units = data[index].category == "Milk" ? "Ml"
+             : data[index].category == "Curd" ? "Ml" : "Gms";
+         return Container(
+           margin: const EdgeInsets.only(left: 8.3,top: 12.3),
+           child: Card(
+             elevation: 1.4,
+             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.4)),
+             child: Column(
+               children: [
+                 const SizedBox(
+                   height: 20,
+                 ),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                   children: [
+                     const Text("Product Name :- ",
+                         style: TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 15.5)),
+                     Text(data[index].productName.toString(),
+                         style: const TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 16))
+                   ],
+                 ),
+                 const SizedBox(
+                   height: 15,
+                 ),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                   children: [
+                     const Text("Category : -",
+                         style: TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 15.5)),
+                     Text(data[index].category.toString(),
+                         style: const TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 16))
+                   ],
+                 ),
+                 const SizedBox(
+                   height: 15,
+                 ),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                   children: [
+                     const Text("Packets : -",
+                         style: TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 15.5)),
+                     Text(data[index].packets.toString(),
+                         style: const TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 16))
+                   ],
+                 ),
+                 const SizedBox(height: 20,),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                   children: [
+                     const Text("Quantity : -",
+                         style: TextStyle(fontFamily: "Poppins-Light",
+                             fontSize: 15.5)),
+                     Text(data[index].quantity.toString(),
+                         style: const TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 16))
+                   ],
+                 ),
+                 const SizedBox(height: 20,),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                   children: [
+                     const Text("Phonenumber : -",
+                         style: TextStyle(fontFamily: "Poppins-Light",
+                             fontSize: 15.5)),
+                     Text(data[index].phonenumber.toString(),
+                         style: const TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 16))
+                   ],
+                 ),
+                 const SizedBox(height: 20,),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                   children: [
+                     const Text("Id : -",
+                         style: TextStyle(fontFamily: "Poppins-Light",
+                             fontSize: 15.5)),
+                     Text(data[index].id.toString(),
+                         style: const TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 16))
+                   ],
+                 ),
+                 const SizedBox(height: 20,),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                   children: [
+                     const Text("userId : -",
+                         style: TextStyle(fontFamily: "Poppins-Light",
+                             fontSize: 15.5)),
+                     Text(data[index].userid.toString(),
+                         style: const TextStyle(
+                             fontFamily: "Poppins-Light", fontSize: 16))
+                   ],
+                 ),
+                 const SizedBox(height: 20,),
+                 UpdateButton(index: index, items: data, id: data[index].id),
+                 const SizedBox(height: 20,),
+               ],
+             ),
+           ),
+         );
+   });
   }
 
+  curdTab(data) {
+    return ListView.builder(
+        itemCount: data.length,
+        physics: const BouncingScrollPhysics(),
+        itemBuilder: (context,index){
+          return Container(
+            margin: const EdgeInsets.only(left: 8.3,top: 12.3),
+            child: Card(
+              elevation: 1.4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.4)),
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Product Name :- ",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].productName.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Category : -",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].category.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Packets : -",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].packets.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Quantity : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].quantity.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Phonenumber : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].phonenumber.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Id : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].id.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("userId : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].userid.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  UpdateButton(index: index, items: data, id: data[index].id),
+                  const SizedBox(height: 20,),
+                ],
+              ),
+            ),
+          );
+        });
 
+  }
 
+  gheeTab(data) {
+    return ListView.builder(
+        itemCount: data.length,
+        physics: const BouncingScrollPhysics(),
+        itemBuilder: (context,index){
+          return Container(
+            margin: const EdgeInsets.only(top: 12.3,left: 8.3),
+            child: Card(
+              elevation: 1.4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.4)),
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Product Name :- ",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].productName.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Category : -",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].category.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Packets : -",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].packets.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Phonenumber : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].phonenumber.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
 
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Quantity : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].quantity.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
 
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Id : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].id.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("userId : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].userid.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  UpdateButton(index: index, items: data, id: data[index].id),
+                  const SizedBox(height: 20,),
+                ],
+              ),
+            ),
+          );
+        });
 
+  }
 
+  paneerTab(data) {
+    return ListView.builder(
+        itemCount: data.length,
+        physics: const BouncingScrollPhysics(),
+        itemBuilder: (context,index){
+          return Container(
+            margin: const EdgeInsets.only(left: 8.3,top: 12.3),
+            child: Card(
+              elevation: 1.4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.5)),
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Product Name :- ",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].productName.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Category : -",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].category.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Packets : -",
+                          style: TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 15.5)),
+                      Text(data[index].packets.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
 
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Quantity : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].quantity.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Phonenumber : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].phonenumber.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("Id : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].id.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const Text("userId : -",
+                          style: TextStyle(fontFamily: "Poppins-Light",
+                              fontSize: 15.5)),
+                      Text(data[index].userid.toString(),
+                          style: const TextStyle(
+                              fontFamily: "Poppins-Light", fontSize: 16))
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  UpdateButton(index: index, items: data, id: data[index].id),
+                  const SizedBox(height: 20,),
+                ],
+              ),
+            ),
+          );
+        });
+  }
 }
-
-
