@@ -59,7 +59,7 @@ class BuildordersState extends State<BuildOrders> {
               if (snapshot.hasData) {
                 var data = snapshot.data;
                 List<Items>? items = getData(data!);
-
+                print(items);
                 return Container(child: loadingItems(items),);
               }
               return Container();

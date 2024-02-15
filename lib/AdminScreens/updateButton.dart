@@ -29,15 +29,14 @@ class UpdateButtonState extends State<UpdateButton> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.indigoAccent,
           minimumSize: const Size(110, 40),
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.5)))
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12.5)))
         ),
         onPressed: () async {
-          print(id);
-         //var data = await get_data(id);
-       setState(() {
-          items![index!].pressed =! items![index!].pressed!;
-       });
-    },
+           setState(() {
+             items![index!].pressed = !items![index!].pressed!;
+           });
+        },
         child: Text(items![index!].pressed!?"Delivered":"Deliver",
         style: const TextStyle(fontSize: 16,fontFamily: "Poppins-Light",
             letterSpacing: 0.8),
